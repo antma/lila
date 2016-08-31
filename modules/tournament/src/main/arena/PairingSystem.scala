@@ -44,7 +44,7 @@ private[tournament] object PairingSystem extends AbstractPairingSystem {
       case x                  => fuccess(x)
     }
 
-  val pairingGroupSize = 18
+  val pairingGroupSize = 20
 
   private def makePreps(data: Data, users: List[String]): Fu[List[Pairing.Prep]] = {
     import data._
@@ -58,7 +58,7 @@ private[tournament] object PairingSystem extends AbstractPairingSystem {
         case Nil              => Nil
       }
     }
-  }.chronometer.logIfSlow(200, pairingLogger) { preps =>
+  }.chronometer.mon(_.tournament.pairing.prepTime).logIfSlow(200, pairingLogger) { preps =>
     s"makePreps ${url(data.tour.id)} ${users.size} users, ${preps.size} preps"
   }.result
 
@@ -75,11 +75,11 @@ private[tournament] object PairingSystem extends AbstractPairingSystem {
       case List(p1, p2) => Pairing.prep(tour, p1.player, p2.player)
     } toList
 
-  private def smartPairings(data: Data, players: RankedPlayers): List[Pairing.Prep] =
-    players.nonEmpty ?? {
-      if (data.tour.isScheduled) OrnicarPairing(data, players)
-      else AntmaPairing(data, players)
-    }
+  private def smartPairings(data: Data, players: RankedPlayers): List[Pairing.Prep] = players.size match {
+    case x if x < 2   => Nil
+    case x if x <= 10 => OrnicarPairing(data, players)
+    case _            => AntmaPairing(data, players)
+  }
 
-  def url(tourId: String) = s"//lichess.org/tournament/$tourId"
+  private[arena] def url(tourId: String) = s"https://lichess.org/tournament/$tourId"
 }

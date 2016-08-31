@@ -1,36 +1,88 @@
-.coach_edit .material.form .form-group textarea {
-  height: 8em;
+.coach a {
+  color: #3893E8;
+}
+.coach .top {
+  background: #303F9F;
+  color: #ddd;
+  display: flex;
+}
+.coach .top a {
+  color: #ddd;
+}
+.coach .top a:hover {
+  color: #ddd;
+  border-bottom: 1px dotted #aaa;
+}
+.coach .top .overview {
+  padding: 15px 30px;
+  box-sizing: border-box;
+}
+.coach .top h1 {
+  font-family: 'Roboto';
+  font-size: 36px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  padding: 10px 0 10px 0!important;
+}
+.coach .top .headline {
+  font-family: 'PT Serif', 'Noto Sans', 'Lucida Grande';
+  font-size: 18px;
+  padding: 0 0 20px 0!important;
+}
+.coach .top table {
+  line-height: 1.7;
+}
+.coach .top table th {
+  opacity: 0.7;
+  padding-right: 20px;
+  text-align: right;
 }
 
-.coach_edit .upload_picture {
-  text-align: center;
-  margin: 30px 0 50px 0;
+.coach .sections {
+  margin-top: 30px;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
 }
 
-.coach_picture form {
-  padding: 30px;
-  border-top: 1px solid #ccc;
-  text-align: center;
+.coach .sections section {
+  font-size: 1.2em;
+  box-sizing: border-box;
+  width: 50%;
+  padding: 20px 40px 20px 20px;
+  text-align: justify;
 }
-.coach_picture form.delete button {
-  color: red;
+.coach .sections section:nth-child(odd) {
+  padding: 20px 20px 20px 40px;
 }
-.coach_picture .cancel {
-  padding: 40px;
-  border-top: 1px solid #ccc;
-}
-.coach_picture .forms > *:first-child {
-  margin-top: 40px;
+.coach section h1 {
+  padding: 0 0 12px 0!important;
+  font-family: 'Roboto';
 }
 
-.thumbnail {
-  display: block;
-  text-align: center;
+.coach .youtube {
+  background: #222;
+  color: #ccc;
+  margin-top: 20px;
+  padding-bottom: 20px;
 }
-.thumbnail img {
-  width: 300px;
-  height: 300px;
-  margin: auto;
-  border-radius: 12px;
-  border: 7px solid #ddd;
+.coach .youtube h1 {
+  padding: 20px 30px!important;
+}
+.coach .youtube .list {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+}
+.coach .youtube .list iframe {
+  margin-bottom: 10px;
+  width: 256px;
+  height: 192px;
+  background: #000;
+}
+.coach .studies {
+  margin-top: 20px;
+}
+.coach .studies h1 {
+  padding: 20px 30px!important;
 }

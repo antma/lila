@@ -3,7 +3,7 @@ package controllers
 import play.api.mvc._, Results._
 
 import lila.app._
-import lila.coach.{ Coach => CoachModel, CoachForm }
+import lila.coach.{ Coach => CoachModel, CoachProfileForm, CoachReviewForm }
 import lila.user.{ User => UserModel, UserRepo }
 import views._
 
@@ -18,15 +18,23 @@ object Coach extends LilaController {
   }
 
   def show(username: String) = Open { implicit ctx =>
-    OptionOk(api find username) { coach =>
-      html.coach.show(coach)
+    OptionFuResult(api find username) { c =>
+      if (c.coach.isFullyEnabled || ctx.me.??(c.coach.is) || isGranted(_.PreviewCoach))
+        Env.study.api.byIds {
+          c.coach.profile.studyIds.map(_.value)
+        } flatMap Env.study.pager.withChaptersAndLiking(ctx.me) flatMap { studies =>
+          api.reviews.approvedByCoach(c.coach) map { reviews =>
+            Ok(html.coach.show(c, reviews, studies))
+          }
+        }
+      else notFound
     }
   }
 
   def edit = Secure(_.Coach) { implicit ctx =>
     me =>
       OptionResult(api findOrInit me) { c =>
-        NoCache(Ok(html.coach.edit(c, CoachForm edit c.coach)))
+        NoCache(Ok(html.coach.edit(c, CoachProfileForm edit c.coach)))
       }
   }
 
@@ -34,9 +42,9 @@ object Coach extends LilaController {
     me =>
       OptionFuResult(api findOrInit me) { c =>
         implicit val req = ctx.body
-        CoachForm.edit(c.coach).bindFromRequest.fold(
+        CoachProfileForm.edit(c.coach).bindFromRequest.fold(
           form => fuccess(BadRequest(html.coach.edit(c, form))),
-          data => api.update(c, data) inject Redirect(routes.Coach.edit)
+          data => api.update(c, data) inject Ok
         )
       }
   }
