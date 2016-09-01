@@ -44,6 +44,9 @@ object mon {
     object mailgun {
       val timeout = inc("http.mailgun.timeout")
     }
+    object userGames {
+      def cost = incX(s"http.user-games.cost")
+    }
   }
   object lobby {
     object hook {
@@ -311,7 +314,6 @@ object mon {
       def skill(v: String) = rec(s"fishnet.client.skill.$v")
       def version(v: String) = rec(s"fishnet.client.version.${makeVersion(v)}")
       def stockfish(v: String) = rec(s"fishnet.client.engine.stockfish.${makeVersion(v)}")
-      def sunsetter(v: String) = rec(s"fishnet.client.engine.sunsetter.${makeVersion(v)}")
       def python(v: String) = rec(s"fishnet.client.python.${makeVersion(v)}")
     }
     object queue {

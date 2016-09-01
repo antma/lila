@@ -138,6 +138,8 @@ POST  /study                           controllers.Study.create
 GET   /study/$id<\w{8}>/socket/v:apiVersion controllers.Study.websocket(id: String, apiVersion: Int)
 GET   /study/$id<\w{8}>.pgn            controllers.Study.pgn(id: String)
 POST  /study/$id<\w{8}>/delete         controllers.Study.delete(id: String)
+GET   /study/$id<\w{8}>/clone          controllers.Study.cloneStudy(id: String)
+POST  /study/$id<\w{8}>/cloneAplly     controllers.Study.cloneApply(id: String)
 GET   /study/$id<\w{8}>/$chapterId<\w{8}>        controllers.Study.chapter(id: String, chapterId: String)
 
 # Learn
@@ -370,13 +372,16 @@ POST  /inbox/$id<\w{8}>              controllers.Message.answer(id: String)
 POST  /inbox/$id<\w{8}>/delete       controllers.Message.delete(id: String)
 
 # Coach
-GET   /coach                           controllers.Coach.index
+GET   /coach                           controllers.Coach.allDefault(page: Int ?= 1)
+GET   /coach/sort/:order               controllers.Coach.all(order: String, page: Int ?= 1)
 GET   /coach/edit                      controllers.Coach.edit
 POST  /coach/edit                      controllers.Coach.editApply
 GET   /coach/edit/picture              controllers.Coach.picture
 POST  /coach/edit/picture              controllers.Coach.pictureApply
 POST  /coach/edit/picture/delete       controllers.Coach.pictureDelete
+POST  /coach/approve-review/:id        controllers.Coach.approveReview(id: String)
 GET   /coach/:username                 controllers.Coach.show(username: String)
+POST  /coach/:username/review          controllers.Coach.review(username: String)
 
 # DB image
 GET   /image/:id/:hash/:name           controllers.Main.image(id: String, hash: String, name: String)

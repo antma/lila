@@ -1,8 +1,8 @@
-@(c: lila.coach.Coach.WithUser, coachReviews: lila.coach.CoachReview.Reviews, studies: Seq[lila.study.Study.WithChaptersAndLiked])(implicit ctx: Context)
+@(c: lila.coach.Coach.WithUser, coachReviews: lila.coach.CoachReview.Reviews, studies: Seq[lila.study.Study.WithChaptersAndLiked], reviewApproval: Boolean)(implicit ctx: Context)
 
 @moreCss = {
+@cssTag("coach.css")
 @if(studies.nonEmpty) { @cssTag("studyList.css") }
-@cssAt("vendor/bar-rating/dist/themes/fontawesome-stars.css")
 }
 
 @moreJs = {
@@ -11,24 +11,34 @@
 }
 
 @side = {
-@ctx.me.map { me =>
-@reviewForm(c, me)
-}
+@reviewForm(c, reviewApproval)
 @reviews(c, coachReviews)
+}
+
+@section(title: String, text: Option[lila.coach.CoachProfile.RichText]) = {
+@text.map { t =>
+<section>
+  <h1>@title</h1>
+  <div class="content">@autoLink(t.value)</div>
+</section>
+}
 }
 
 @layout(title = c.user.titleUsername,
 side = side.some,
-evenMoreCss = moreCss) {
+moreJs = moreJs,
+moreCss = moreCss) {
 <div class="content_box no_padding coach">
   <div class="top">
     @pic(c, 250)
     @defining(c.user.profileOrDefault) { profile =>
     <div class="overview">
       <h1>
-        @c.user.title.map { t => @t }@c.user.profileOrDefault.nonEmptyRealName.getOrElse(c.user.username)
+        @c.user.title.map { t => @t }@c.user.realNameOrUsername
       </h1>
-      <p class="headline">@c.coach.profile.headline</p>
+      @c.coach.profile.headline.map { h =>
+      <p class="headline @if(h.size < 60){small} else {@if(h.size < 120){medium}else{large}}">@h</p>
+      }
       <table>
         <tbody>
           <tr>
@@ -50,12 +60,19 @@ evenMoreCss = moreCss) {
             <td>@l</td>
           </tr>
           }
-          @profile.fideRating.map { r =>
           <tr class="rating">
-            <th>FIDE rating</th>
-            <td>@r</td>
+            <th>Rating</th>
+            <td>
+              @profile.fideRating.map { r =>
+              FIDE: @r,
+              }
+              <a href="@routes.User.show(c.user.username)">
+                @c.user.best8Perfs.take(6).filter(c.user.hasEstablishedRating).map { pt =>
+                @showPerfRating(c.user, pt)
+                }
+              </a>
+            </td>
           </tr>
-          }
           @c.coach.profile.hourlyRate.map { r =>
           <tr class="rate">
             <th>Hourly rate</th>
@@ -72,17 +89,11 @@ evenMoreCss = moreCss) {
               }
             </td>
           </tr>
-          <tr class="contact">
-            <th>Contact</th>
-            <td>
-              <a class="text" data-icon="c" href="@routes.Message.form?user=@c.user.username">Send a private message</a>
-            </td>
-          </tr>
           @if(ctx.me.??(c.coach.is) || isGranted(_.PreviewCoach)) {
           <tr class="edit">
             <th>Admin</th>
             <td>
-              @if(c.coach.isFullyEnabled) {
+              @if(c.coach.isListed) {
               This page is now public.
               } else {
               This page is not public yet.
@@ -90,6 +101,13 @@ evenMoreCss = moreCss) {
               @if(ctx.me.??(c.coach.is)) {
               <a href="@routes.Coach.edit" class="text" data-icon="m">Edit my coach profile</a>
               }
+            </td>
+          </tr>
+          } else {
+          <tr class="contact">
+            <th>Contact</th>
+            <td>
+              <a class="text" data-icon="c" href="@routes.Message.form?user=@c.user.username">Send a private message</a>
             </td>
           </tr>
           }
@@ -100,42 +118,12 @@ evenMoreCss = moreCss) {
   }
   @defining(c.coach.profile) { profile =>
   <div class="sections">
-    @profile.description.map { t =>
-    <section>
-      <h1>About me</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
-    @profile.playingExperience.map { t =>
-    <section>
-      <h1>Playing experience</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
-    @profile.teachingExperience.map { t =>
-    <section>
-      <h1>Teaching experience</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
-    @profile.otherExperience.map { t =>
-    <section>
-      <h1>Other experiences</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
-    @profile.skills.map { t =>
-    <section>
-      <h1>My best skills</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
-    @profile.methodology.map { t =>
-    <section>
-      <h1>Teaching methodology</h1>
-      <div class="content">@autoLink(t.value)</div>
-    </section>
-    }
+    @section("About me", profile.description)
+    @section("Playing experience", profile.playingExperience)
+    @section("Teaching experience", profile.teachingExperience)
+    @section("Other experiences", profile.otherExperience)
+    @section("Best skills", profile.skills)
+    @section("Teaching methodology", profile.methodology)
   </div>
   @if(profile.youtubeUrls.nonEmpty) {
   <section class="youtube">

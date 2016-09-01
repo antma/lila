@@ -62,6 +62,21 @@ final class StudyApi(
         scheduleTimeline(res.study.id) inject res
     }
 
+  def clone(me: User, prev: Study): Fu[Study] = {
+    chapterRepo.orderedByStudy(prev.id).flatMap { chapters =>
+      val study1 = prev.cloneFor(me)
+      val newChapters = chapters.map(_ cloneFor study1)
+      val study = study1.withChapter(newChapters.headOption.err {
+        s"Cloning study ${study1.id} from ${prev.id} has no first chapter!"
+      })
+      studyRepo.insert(study) >>
+        newChapters.map(chapterRepo.insert).sequenceFu >>- {
+          chat ! lila.chat.actorApi.SystemTalk(study.id,
+            s"Cloned from lichess.org/study/${prev.id}")
+        } inject study
+    }
+  }
+
   def resetIfOld(study: Study, chapters: List[Chapter.Metadata]): Fu[Study] =
     chapters.headOption match {
       case Some(c) if study.isOld && study.position != c.initialPosition =>
