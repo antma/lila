@@ -41,6 +41,17 @@ object PairingRepo {
         }
       } map Pairing.LastOpponents.apply
 
+  def recentOpponents(tourId: String, userIds: Iterable[String], nb: Int): Fu[Pairing.RecentOpponents] =
+    coll.find(
+      selectTour(tourId) ++ $doc("u" $in userIds),
+      $doc("_id" -> false, "u" -> true)
+    ).sort(recentSort).cursor[Bdoc]().enumerate(nb) |>>>
+      Iteratee.fold(Pairing.RecentOpponents()) { (acc, doc) =>
+        ~doc.getAs[List[String]]("u") match {
+          case List(u1, u2) => acc.updated(u1, u2)
+        }
+      }
+
   def opponentsOf(tourId: String, userId: String): Fu[Set[String]] =
     coll.find(
       selectTourUser(tourId, userId),

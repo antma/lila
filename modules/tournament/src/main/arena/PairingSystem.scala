@@ -12,6 +12,7 @@ private[tournament] object PairingSystem extends AbstractPairingSystem {
   case class Data(
       tour: Tournament,
       lastOpponents: Pairing.LastOpponents,
+      recentOpponents: Pairing.RecentOpponents,
       ranking: Map[String, Int],
       onlyTwoActivePlayers: Boolean) {
 
@@ -23,10 +24,11 @@ private[tournament] object PairingSystem extends AbstractPairingSystem {
   def createPairings(tour: Tournament, users: WaitingUsers, ranking: Ranking): Fu[Pairings] = {
     for {
       lastOpponents <- PairingRepo.lastOpponents(tour.id, users.all, Math.min(100, users.size * 4))
+      recentOpponents <- PairingRepo.recentOpponents(tour.id, users.all, Math.min(100, users.size * 4))
       onlyTwoActivePlayers <- (tour.nbPlayers > 20).fold(
         fuccess(false),
         PlayerRepo.countActive(tour.id).map(2==))
-      data = Data(tour, lastOpponents, ranking, onlyTwoActivePlayers)
+      data = Data(tour, lastOpponents, recentOpponents, ranking, onlyTwoActivePlayers)
       preps <- if (data.isFirstRound) evenOrAll(data, users)
       else makePreps(data, users.waiting) flatMap {
         case Nil => fuccess(Nil)

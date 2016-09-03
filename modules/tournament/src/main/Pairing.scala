@@ -63,6 +63,21 @@ private[tournament] object Pairing {
 
   case class LastOpponents(hash: Map[String, String]) extends AnyVal
 
+  case class RecentOpponents(sm: (Map[(String, String), Double], Map[String, Double]) = (Map.empty, Map.empty)) extends AnyVal {
+    def updated(u1: String, u2: String) : RecentOpponents =
+      if (u1 > u2) updated (u2, u1)
+      else {
+        val s1 = sm._2.get(u1).getOrElse(1.0)
+        val s2 = sm._2.get(u2).getOrElse(1.0)
+        val x = sm._1.get((u1, u2)).getOrElse(0.0)
+        RecentOpponents((sm._1.updated((u1, u2), x + s1.max(s2)), sm._2.updated(u1, s1 * 0.5).updated(u2, s2 * 0.5)))
+      }
+    def score(u1: String, u2: String) : Double =
+      if (u1 > u2) score(u2, u1)
+      else sm._1.get((u1, u2)).getOrElse(0.0)
+    def justPlayTogether(u1: String, u2: String): Boolean = score(u1, u2) > (1.0 - 1e-9)
+  }
+
   def apply(tourId: String, u1: String, u2: String): Pairing = new Pairing(
     id = IdGenerator.game,
     tourId = tourId,
