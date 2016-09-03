@@ -19,7 +19,7 @@ final class CoachApi(
 
   private val cache = AsyncCache.single[List[Coach]](
     f = coachColl.find($empty).list[Coach](),
-    timeToLive = 1 hour)
+    timeToLive = 10 minutes)
 
   private def all = cache(true)
 
@@ -28,11 +28,15 @@ final class CoachApi(
   def find(username: String): Fu[Option[Coach.WithUser]] =
     UserRepo named username flatMap { _ ?? find }
 
-  def find(user: User): Fu[Option[Coach.WithUser]] =
+  def find(user: User): Fu[Option[Coach.WithUser]] = Granter(_.Coach)(user) ?? {
     byId(Coach.Id(user.id)) map2 withUser(user)
+  }
 
-  def findOrInit(user: User): Fu[Option[Coach.WithUser]] = find(user) orElse {
-    fuccess(Coach.WithUser(Coach make user, user).some)
+  def findOrInit(user: User): Fu[Option[Coach.WithUser]] = Granter(_.Coach)(user) ?? {
+    find(user) orElse {
+      val c = Coach.WithUser(Coach make user, user)
+      coachColl.insert(c.coach) >> cache.clear inject c.some
+    }
   }
 
   def isListedCoach(user: User): Fu[Boolean] =
@@ -59,12 +63,12 @@ final class CoachApi(
   def setNbReviews(id: Coach.Id, nb: Int): Funit =
     coachColl.update($id(id), $set("nbReviews" -> nb)).void >> cache.clear
 
-  private[coach] def toggleByMod(username: String, value: Boolean): Fu[String] =
+  private[coach] def toggleApproved(username: String, value: Boolean): Fu[String] =
     find(username) flatMap {
       case None => fuccess("No such coach")
       case Some(c) => coachColl.update(
         $id(c.coach.id),
-        $set("enabledByMod" -> value)
+        $set("approved" -> value)
       ) >> cache.clear inject "Done!"
     }
 

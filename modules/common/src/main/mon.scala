@@ -194,6 +194,9 @@ object mon {
       }
       val percent = rec("security.proxy.percent")
     }
+    object rateLimit {
+      def generic(key: String) = inc(s"security.rate_limit.generic.$key")
+    }
   }
   object tv {
     object stream {
@@ -206,6 +209,11 @@ object mon {
     val unfollow = inc("relation.unfollow")
     val block = inc("relation.block")
     val unblock = inc("relation.unblock")
+  }
+  object coach {
+    object pageView {
+      def profile(coachId: String) = inc(s"coach.page_view.profile.$coachId")
+    }
   }
   object tournament {
     object pairing {
